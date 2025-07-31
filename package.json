@@ -1,0 +1,30 @@
+{
+  "name": "studious-rainbow",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/node": "^24.1.0",
+    "dotenv": "^17.2.0",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@aave/contract-helpers": "^1.36.0",
+    "@aave/math-utils": "^1.36.0",
+    "@bgd-labs/aave-address-book": "^4.25.1",
+    "@duckdb/node-api": "^1.3.2-alpha.25",
+    "chalk": "^5.4.1",
+    "cli-table3": "^0.6.5",
+    "dayjs": "^1.11.13",
+    "duckdb": "^1.3.2",
+    "ethers": "^5.8.0",
+    "graphql-request": "^7.2.0",
+    "viem": "^2.33.1"
+  }
+}
