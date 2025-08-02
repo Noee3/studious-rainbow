@@ -36,4 +36,15 @@ export class Asset {
             last_updated: BigInt(this.lastUpdated.getTime())
         };
     }
+
+    static fromDB(assetDB: AssetDB): Asset {
+        return new Asset(
+            assetDB.address as Address,
+            BigInt(assetDB.decimals),
+            assetDB.name,
+            assetDB.symbol,
+            new Date(Number(assetDB.created_at)),
+            new Date(Number(assetDB.last_updated))
+        );
+    }
 }

@@ -64,4 +64,22 @@ export class Reserve {
             last_updated: BigInt(this.lastUpdated.getTime())
         };
     }
+
+    static fromDB(reserveDB: ReserveDB): Reserve {
+        return new Reserve(
+            reserveDB.asset_address as Address,
+            reserveDB.name,
+            reserveDB.symbol,
+            BigInt(reserveDB.decimals),
+            BigInt(reserveDB.liquidation_threshold),
+            BigInt(reserveDB.liquidity_index),
+            BigInt(reserveDB.variable_borrow_index),
+            BigInt(reserveDB.ltv),
+            BigInt(reserveDB.liquidation_bonus),
+            BigInt(reserveDB.reserve_factor),
+            reserveDB.is_active,
+            reserveDB.is_frozen,
+            new Date(Number(reserveDB.last_updated))
+        );
+    }
 }

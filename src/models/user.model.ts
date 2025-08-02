@@ -29,4 +29,12 @@ export class User {
         };
     }
 
+    static fromDB(userDB: UserDB): User {
+        return new User(
+            userDB.address as Address,
+            userDB.emode_category_id,
+            new Date(Number(userDB.created_at)),
+            new Date(Number(userDB.last_updated))
+        );
+    }
 }

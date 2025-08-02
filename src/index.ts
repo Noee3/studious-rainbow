@@ -1,11 +1,11 @@
 
-import { LiquidationController } from './controller/liquidation.controller';
-import { BaseController } from "./controller/base.controller";
-import { Address } from "viem";
-import { aave_poolAbi } from "./typechain/aave.abi";
-import { aavePool } from "./typechain/abis/aave_pool";
+// import { LiquidationController } from './controller.old/liquidation.controller';
+// import { BaseController } from "./controller.old/base.controller";
+// import { Address } from "viem";
+// import { aave_poolAbi } from "./typechain/aave.abi";
+// import { aavePool } from "./typechain/abis/aave_pool";
 
-
+import { ServiceContainer } from "./services/service_container";
 
 /* TODO update index.ts with new function from controller
  
@@ -26,32 +26,38 @@ avec une healthFactor < 1, ce qui permet de surveiller une vues ou une table si 
 
 
 
-export interface Event {
-    eventName: string;
-    args: any;
-    address: Address;
-    topics: string[],
-    data: string,
-    blockHash: string,
-    blockNumber: bigint,
-    blockTimestamp: string,
-    transactionHash: string,
-    transactionIndex: number,
-    logIndex: number,
-    removed: boolean
-};
+// export interface Event {
+//     eventName: string;
+//     args: any;
+//     address: Address;
+//     topics: string[],
+//     data: string,
+//     blockHash: string,
+//     blockNumber: bigint,
+//     blockTimestamp: string,
+//     transactionHash: string,
+//     transactionIndex: number,
+//     logIndex: number,
+//     removed: boolean
+// };
 
 
 
 (async () => {
 
-    const liquidationController: LiquidationController = new LiquidationController();
+    await ServiceContainer.initialize();
 
-    await liquidationController.init();
+    // await ServiceContainer.dbService.resetDatabase();
 
-    await liquidationController.fetchData(10);
 
-    await liquidationController.computeLiquidationsOpportunities();
+
+    // const liquidationController: LiquidationController = new LiquidationController();
+
+    // await liquidationController.init();
+
+    // await liquidationController.fetchData(10);
+
+    // await liquidationController.computeLiquidationsOpportunities();
 
 
     // async getContractEvents(contractAddress: Address, abi: any): Promise<any> {

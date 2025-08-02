@@ -1,20 +1,23 @@
 import { DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
+import { dbConfigs } from '../config/database.config';
 import fs from 'fs/promises';
 import path from 'path';
 
 export class DuckDBService {
+    private config = dbConfigs.development;
+
     public connection: DuckDBConnection | null = null;
     public tables: string[] = [];
 
-    async connect(dbName: string): Promise<DuckDBConnection> {
+    async connect(): Promise<DuckDBConnection> {
         try {
-            const instance = await DuckDBInstance.create(`./database/${dbName}.db`);
+            const instance = await DuckDBInstance.create(path.resolve(this.config.path));
             this.connection = await DuckDBConnection.create(instance);
             this.tables = ['assets', 'asset_prices', 'emode_categories', 'reserves', 'users', 'user_reserves'];
-            console.info(' 📀 [DB] Connected to DuckDB instance %s', dbName);
+            console.info('[DuckDBService] Connected to DuckDB instance %s', this.config.name);
             return this.connection;
         } catch (e) {
-            console.error('[DB][connect] :: Error connecting to DuckDB:', e);
+            console.error('[DuckDBService][connect] ::', e);
             throw e;
         }
     }
@@ -32,7 +35,8 @@ export class DuckDBService {
             try {
                 await this.connection!.run(`DROP TABLE IF EXISTS ${table}`);
             } catch (error) {
-                console.error(`❌ Failed to drop ${table}:`, error);
+                console.error(`[DuckDBService][dropTable] :: Failed to drop ${table}:`, error);
+                throw error;
             }
         }
     }
@@ -42,15 +46,14 @@ export class DuckDBService {
         for (const table of inverseTables) {
             await this.connection!.run(`DELETE FROM ${table}`);
         }
-        console.log(`✅ Cleared tables: ${inverseTables.join(', ')}`);
+        console.log(`[DuckDBService] ✅ Cleared tables: ${inverseTables.join(', ')}`);
     }
 
     async executeSQLFile(): Promise<void> {
         try {
 
-            const filePath = path.join(__dirname, '../../src/database/schema.sql');
+            const filePath = path.join(__dirname, '../data/schema.sql');
             const sqlContent = await fs.readFile(filePath, 'utf-8');
-
 
             const statements = sqlContent
                 .split(';')
@@ -62,10 +65,10 @@ export class DuckDBService {
                     await this.connection!.run(statement);
                 }
             }
-            console.log(`📂  SQL file executed successfully: ${filePath}`);
+            console.log(`[DuckDBService] 📂 SQL file executed successfully: ${filePath}`);
 
         } catch (error) {
-            console.error(`❌ Error executing SQL file `, error);
+            console.error(`[DuckDBService][executeSQLFile] ::`, error);
             throw error;
         }
     }

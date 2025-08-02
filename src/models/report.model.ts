@@ -1,5 +1,5 @@
 import { Address } from "viem";
-import { UserAccountData, UserAccountDataNormalized } from '../models/userAccountData.model';
+import { UserAccountData, UserAccountDataNormalized } from './user_account_data.model';
 
 
 export interface ReportDataNormalized {

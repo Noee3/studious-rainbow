@@ -1,28 +1,39 @@
-import * as dotenv from 'dotenv';
-import * as path from 'path';
+import { chainConfigs } from '../config/blockchain.config';
 import { createPublicClient, http, webSocket, Address } from "viem";
-import { base } from 'viem/chains';
-
-dotenv.config({ path: path.join(__dirname, '../../.env'), quiet: true });
-const { RPC_URL, GRAPH_API_KEY } = process.env;
 
 export class ViemService {
-    protected client;
-    protected clientWatch;
-    protected blockNumber: BigInt;
+
+    private config = chainConfigs;
+    public client;
+    public clientWatch;
+    public blockNumber: BigInt;
+
+    // contracts
+    public poolContract: Address = this.config.base.contracts.pool;
+    public uiPoolDataProvider: Address = this.config.base.contracts.uiPoolDataProvider;
+    public addressProvider: Address = this.config.base.contracts.addressProvider;
+    public aaveOracle: Address = this.config.base.contracts.aaveOracle;
 
     constructor() {
-        this.client = createPublicClient({
-            chain: base,
-            transport: http(RPC_URL),
-        });
+        try {
+            this.client = createPublicClient({
+                chain: this.config.base.chain,
+                transport: http(this.config.base.rpcUrl),
+            });
 
-        this.clientWatch = createPublicClient({
-            chain: base,
-            transport: webSocket(RPC_URL)
-        })
+            this.clientWatch = createPublicClient({
+                chain: this.config.base.chain,
+                transport: webSocket(this.config.base.rpcUrl)
+            })
 
-        this.blockNumber = BigInt(33413241);
+            this.blockNumber = BigInt(33413241);
+        } catch (error) {
+            console.error(
+                "[ViemService] :: Error initializing ViemService",
+                error
+            )
+            throw error;
+        }
     }
 
 
