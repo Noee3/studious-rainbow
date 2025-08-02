@@ -15,21 +15,26 @@ export class ReserveController extends BaseController {
         this.connection = _connection;
     }
 
-    async init(assetController: AssetController): Promise<{ reserves: Reserve[], assets: Asset[] }> {
+    async init(assetController: AssetController): Promise<{ reservesData: Reserve[], assets: Asset[] }> {
         try {
             console.info("[ReserveController] :: initialisation");
             let reservesData = await this.fetchReservesDB();
             let assetsData: Asset[] = [];
+
             if (reservesData.length === 0) {
+                console.info("[ReserveController] :: fetchReserveData 🌐");
                 reservesData = await this.fetchReservesData();
                 assetsData = await assetController.init(reservesData);
                 await this.insertReservesDB(reservesData);
 
                 //not necessary just to confirm data conformity
                 reservesData = await this.fetchReservesDB();
+            } else {
+                console.info("[ReserveController] :: fetchReserveDB 💾");
+                assetsData = await assetController.init(reservesData);
             }
 
-            return { reserves: reservesData, assets: assetsData };
+            return { reservesData: reservesData, assets: assetsData };
 
         } catch (e) {
             console.error("[ReserveController][init] :: Error initialising reserves data:", e);
@@ -126,5 +131,27 @@ export class ReserveController extends BaseController {
             throw e;
         }
     }
+
+    async updateReserve(address: string, fields: Record<string, any>) {
+        const setters: string = Object.entries(fields).map(([key, value]) =>
+            `${key} = ${value}`).join(', ');
+
+        const query = `UPDATE ${this.tableName} SET ${setters} WHERE asset_address = '${address}'`;
+
+        console.log(address, query);
+        return await this.connection!.run(
+            query
+        );
+    }
+    // before update;
+    // ┌────────────────────────────────────────────┬──────────────────────────────┬──────────────────────────────┐
+    // │               asset_address                │       liquidity_index        │    variable_borrow_index     │
+    // │                  varchar                   │           varchar            │           varchar            │
+    // ├────────────────────────────────────────────┼──────────────────────────────┼──────────────────────────────┤
+    // │ 0x4200000000000000000000000000000000000006 │ 1030742314325660509483125804 │ 1050600616100571433589531299 │
+    // │ 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913 │ 1097382995350071329581309825 │ 1132607373325004363375772787 │
+    // │ 0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf │ 1001625143498937798443355853 │ 1009570056579334084530848299 │
+    // └────────────────────────────────────────────┴──────────────────────────────┴──────────────────────────────┘
+
     // async update//TODO
 }

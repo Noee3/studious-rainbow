@@ -19,6 +19,7 @@ export class AssetController extends BaseController {
             console.info("[AssetController] :: initialisation");
             let assets = await this.fetchAssetsDB();
             if (assets.length === 0) {
+                console.info("[AssetController] :: fetchAssetsData 🌐");
                 for (const reserve of reserves) {
                     assets.push(new Asset(
                         reserve.assetAddress as Address,
@@ -31,7 +32,10 @@ export class AssetController extends BaseController {
 
                 // not necessary just to confirm data conformity
                 assets = await this.fetchAssetsDB();
+            } else {
+                console.info("[AssetController] :: fetchAssetsDB 💾");
             }
+
             return assets;
         } catch (e) {
             console.error("[AssetController][init] :: Error initialising assets data:", e);

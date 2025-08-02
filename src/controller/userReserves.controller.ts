@@ -18,13 +18,16 @@ export class UserReservesController extends BaseController {
     async init(userAddress: Address): Promise<UserReserve[]> {
         try {
             console.info("[UserReservesController] :: initialisation for user:", userAddress);
-            let userReserves = await this.fetchUserReservesDB();
+            let userReserves = await this.fetchUserReservesDB(userAddress);
             if (userReserves.length === 0) {
+                console.info("[UserReservesController] :: fetchUserReservesData 🌐");
                 userReserves = await this.fetchUserReservesData(userAddress);
                 await this.insertUserReservesDB(userReserves);
 
                 // not necessary just to confirm data conformity
-                userReserves = await this.fetchUserReservesDB();
+                userReserves = await this.fetchUserReservesDB(userAddress);
+            } else {
+                console.info("[UserReservesController] :: fetchUserReservesDB 💾");
             }
             return userReserves;
         } catch (e) {
@@ -83,9 +86,13 @@ export class UserReservesController extends BaseController {
         }
     }
 
-    async fetchUserReservesDB(): Promise<UserReserve[]> {
+    async fetchUserReservesDB(userAddress?: Address): Promise<UserReserve[]> {
         try {
-            const result = await this.connection!.run(`SELECT * FROM ${this.tableName}`);
+            let query = `SELECT * FROM ${this.tableName}`;
+            if (userAddress) {
+                query += ` WHERE user_address = '${userAddress}'`;
+            }
+            const result = await this.connection!.run(query);
             const rows: UserReserveDB[] = await result.getRowObjectsJson() as unknown as UserReserveDB[];
 
             const userReserves = rows.map((row: UserReserveDB) => new UserReserve(

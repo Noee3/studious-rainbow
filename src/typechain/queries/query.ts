@@ -1,4 +1,4 @@
-export const queryAaveUsers: any = (blockNumber: number, first: number, skip: number) => {
+export const queryAaveUsers: any = (blockNumber: number, first: number, skip: number = 0) => {
     return `
     {
         users(block: { number: ${blockNumber}}, first: ${first}, skip: ${skip}, where: {

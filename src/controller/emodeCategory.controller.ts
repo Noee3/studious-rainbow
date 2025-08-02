@@ -20,13 +20,17 @@ export class EmodeCategoryController extends BaseController {
             console.info("[EmodeCategoryController] :: initialisation");
             let emodeCategories = await this.fetchEmodeCategoriesDB();
             if (emodeCategories.length === 0) {
+                console.info("[EmodeCategoryController] :: fetchEmodeCategoriesData 🌐");
                 const categories = await this.fetchEmodeCategoriesId();
                 for (let i = 0; i < categories.length; i++) {
                     const emodeCategory = await this.fetchEmodeCategoryData(categories[i]);
                     emodeCategories.push(emodeCategory);
                 }
                 await this.insertEmodeCategoriesDB(emodeCategories);
+            } else {
+                console.info("[EmodeCategoryController] :: fetchEmodeCategoriesDB 💾");
             }
+
             return emodeCategories;
         } catch (e) {
             console.error("[EmodeCategoryController][init] :: Error initialising emode categories data:", e);

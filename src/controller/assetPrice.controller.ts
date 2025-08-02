@@ -3,7 +3,6 @@ import { BaseController } from "./base.controller";
 import { DuckDBConnection } from '@duckdb/node-api';
 import { AssetPrice, AssetPriceDB } from '../models/assetPrice.model';
 import { aave_oracleAbi } from "../typechain/aave.abi";
-import { timestamp } from "@bgd-labs/aave-address-book/tokenlist";
 import { Asset } from "../models/asset.model";
 
 
@@ -22,11 +21,14 @@ export class AssetPriceController extends BaseController {
             console.info("[AssetPriceController] :: initialisation");
             let assetsPrices = await this.fetchAssetsPricesDB();
             if (assetsPrices.length === 0) {
+                console.info("[AssetPriceController] :: fetchAssetsPricesData 🌐");
                 assetsPrices = await this.fetchAssetsPricesData(assets.map(asset => asset.address));
                 await this.insertAssetsPricesDB(assetsPrices);
 
                 //not necessary just to confirm data conformity
                 assetsPrices = await this.fetchAssetsPricesDB();
+            } else {
+                console.info("[AssetPriceController] :: fetchAssetsPricesDB 💾");
             }
             return assetsPrices;
         } catch (e) {

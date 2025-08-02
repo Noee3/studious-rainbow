@@ -36,4 +36,15 @@ export class UserReserve {
             last_updated: BigInt(this.lastUpdated.getTime())
         };
     }
+
+    static fromDB(db: UserReserveDB): UserReserve {
+        return new UserReserve(
+            db.user_address as Address,
+            db.asset_address as Address,
+            db.usage_as_collateral_enabled,
+            BigInt(db.scaled_atoken_balance),
+            BigInt(db.scaled_variable_debt),
+            new Date(Number(db.last_updated))
+        );
+    }
 }
