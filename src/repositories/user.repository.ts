@@ -5,7 +5,9 @@ import { ViemService } from "../services/viem.service";
 import { BaseRepository } from "./base/base.repository";
 import { BlockchainRepository } from "./base/blockchain.repository";
 import { SubgraphService } from "../services/subgraph.service";
-import { queryAaveUsers } from "../typechain/subgraph_queries/queries";
+import { queryAaveUsers, queryAaveUsersByAddress } from "../typechain/subgraph_queries/queries";
+import { UserAccountData } from "../models/user_account_data.model";
+import { poolAbi } from "../typechain/abis/aavePool.abi";
 
 
 export class UserRepository extends BaseRepository<User, UserDB> {
@@ -28,13 +30,13 @@ export class UserRepository extends BaseRepository<User, UserDB> {
                           BLOCKCHAIN
     //////////////////////////////////////////////////////////////*/
 
-    public async fetchUsersData(max: number): Promise<User[]> {
+    public async fetchUsersData(num: number): Promise<User[]> {
         let limit: number = 1000;
 
         let users: User[] = [];
 
-        if (max > limit) {
-            const maxCalls = Math.ceil(max / limit);
+        if (num > limit) {
+            const maxCalls = Math.ceil(num / limit);
             let count: number = 1;
 
             while (count < maxCalls) {
@@ -58,7 +60,7 @@ export class UserRepository extends BaseRepository<User, UserDB> {
                 await new Promise(resolve => setTimeout(resolve, 10_000)); // Delay to avoid rate limiting 10 sec
             }
         } else {
-            const data: any = await this.blockChainRepository.querySubgraph(queryAaveUsers(Number(this.viemService.blockNumber), max), {});
+            const data: any = await this.blockChainRepository.querySubgraph(queryAaveUsers(Number(this.viemService.blockNumber), num), {});
             const result = data.users.map((e: any) => {
                 return new User(
                     e.id as Address,
@@ -66,20 +68,68 @@ export class UserRepository extends BaseRepository<User, UserDB> {
                 );
             });
 
+            users = result;
+
             await this.insertMany(result);
         }
 
         return users;
     }
 
+    public async fetchUsersDataByAddresses(userAddresses: Address[]): Promise<User[]> {
+        if (userAddresses.length === 0) {
+            return [];
+        }
+
+        const users: string = `"${userAddresses.join('","')}"`;
+        const data: any = await this.blockChainRepository.querySubgraph(queryAaveUsersByAddress(Number(this.viemService.blockNumber), users), {});
+
+        const result = data.users.map((e: any) => {
+            return new User(
+                e.id as Address,
+                e.eModeCategoryId?.id ? Number(e.eModeCategoryId?.id) : undefined,
+            );
+        });
+
+        await this.insertMany(result);
+
+        return result;
+    }
+
+
+
+    public async fetchUserAccountData(userAddress: Address, blockNumber?: bigint): Promise<UserAccountData> {
+        const result = await this.blockChainRepository.readContract<any>(
+            this.viemService.poolContract,
+            poolAbi,
+            'getUserAccountData',
+            [userAddress],
+            blockNumber
+        );
+
+        return new UserAccountData(
+            BigInt(result[0]), // totalCollateralBase
+            BigInt(result[1]), // totalDebtBase
+            BigInt(result[3]), // currentLiquidationThreshold
+            BigInt(result[4]), // ltv
+            BigInt(result[5])  // healthFactor
+        );
+    }
+
     /*//////////////////////////////////////////////////////////////
                             DATABASE
     //////////////////////////////////////////////////////////////*/
 
+    public async usersExists(userAddresses: Address[]): Promise<User[]> {
+        const where = `address IN ('${userAddresses.join("','")}')`;
+        const result = await this.fetchTable(where);
+        return result;
+    }
+
+
     protected fromDB(dbRecord: UserDB): User {
         return User.fromDB(dbRecord);
     }
-
 
     protected toDB(model: User): UserDB {
         return model.toDB();
@@ -92,3 +142,5 @@ export class UserRepository extends BaseRepository<User, UserDB> {
         appender.appendBigInt(dbRecord.last_updated);
     }
 }
+
+

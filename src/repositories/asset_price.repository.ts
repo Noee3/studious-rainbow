@@ -35,8 +35,6 @@ export class AssetPriceRepository extends BaseRepository<AssetPrice, AssetPriceD
             [assetsAddress],
         );
 
-        console.log(result);
-
         return result.map((price, index) => new AssetPrice(
             assetsAddress[index],
             price,

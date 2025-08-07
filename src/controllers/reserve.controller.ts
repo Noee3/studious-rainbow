@@ -4,33 +4,27 @@ import { ReserveRepository } from "../repositories/reserve.repository";
 import { AssetController } from "./asset.controller";
 
 export class ReserveController {
-    private reserveRepository: ReserveRepository;
+    public reserveRepository: ReserveRepository;
 
     constructor(reserveRepository: ReserveRepository) {
         this.reserveRepository = reserveRepository;
     }
 
-    async init(assetController: AssetController): Promise<{ reservesData: Reserve[], assets: Asset[] }> {
+    async init(): Promise<Reserve[]> {
         try {
             console.info("[ReserveController] :: initialisation");
             let reservesData = await this.fetchAllReserves();
 
-            let assetsData: Asset[] = [];
-
             if (reservesData.length === 0) {
                 console.info("[ReserveController] :: fetchReserveData 🌐");
                 reservesData = await this.reserveRepository.fetchReservesData();
-                assetsData = await assetController.init(reservesData);
                 await this.insertReserves(reservesData);
 
-                //not necessary just to confirm data conformity
-                reservesData = await this.fetchAllReserves();
             } else {
                 console.info("[ReserveController] :: fetchReserveDB 💾");
-                assetsData = await assetController.init(reservesData);
             }
 
-            return { reservesData: reservesData, assets: assetsData };
+            return reservesData;
 
         } catch (e) {
             console.error("[ReserveController][init] :: Error initialising reserves data:", e);
@@ -38,9 +32,18 @@ export class ReserveController {
         }
     }
 
-    async fetchAllReserves(): Promise<Reserve[]> {
+    async getReservesCount(where?: string): Promise<number> {
         try {
-            return await this.reserveRepository.fetchAll();
+            return await this.reserveRepository.getTableCount(where);
+        } catch (error) {
+            console.error("[ReserveController][getReserveCount] :: Error fetching reserve count:", error);
+            throw error;
+        }
+    }
+
+    async fetchAllReserves(where?: string): Promise<Reserve[]> {
+        try {
+            return await this.reserveRepository.fetchAll(where);
         } catch (error) {
             console.error("[ReserveController][fetchAllReserves] :: Error fetching reserves:", error);
             throw error;
@@ -55,6 +58,7 @@ export class ReserveController {
             throw error;
         }
     }
+
 
     async insertReserves(reserves: Reserve[]): Promise<any> {
         try {

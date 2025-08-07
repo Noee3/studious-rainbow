@@ -17,14 +17,10 @@ export class AssetPriceController {
             let assetsPrices = await this.fetchAssetsPricesDB();
             if (assetsPrices.length === 0) {
                 console.info("[AssetPriceController] :: fetchAssetsPricesData 🌐");
-                console.log(assets);
-                console.log(assets.map(asset => asset.address));
 
                 assetsPrices = await this.assetPriceRepository.fetchAssetsPricesData(assets.map(asset => asset.address));
                 await this.insertAssetsPricesDB(assetsPrices);
 
-                // not necessary just to confirm data conformity
-                assetsPrices = await this.fetchAssetsPricesDB();
             } else {
                 console.info("[AssetPriceController] :: fetchAssetsPricesDB 💾");
             }
@@ -32,6 +28,15 @@ export class AssetPriceController {
         } catch (e) {
             console.error("[AssetPriceController][init] :: Error initialising asset prices data:", e);
             throw e;
+        }
+    }
+
+    async getAssetPricesCount(where?: string): Promise<number> {
+        try {
+            return await this.assetPriceRepository.getTableCount(where);
+        } catch (error) {
+            console.error("[AssetPriceController][getAssetPricesCount] :: Error fetching asset prices count:", error);
+            throw error;
         }
     }
 

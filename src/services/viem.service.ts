@@ -6,7 +6,7 @@ export class ViemService {
     private config = chainConfigs;
     public client;
     public clientWatch;
-    public blockNumber: BigInt;
+    public blockNumber: bigint;
 
     // contracts
     public poolContract: Address = this.config.base.contracts.pool;
@@ -25,8 +25,7 @@ export class ViemService {
                 chain: this.config.base.chain,
                 transport: webSocket(this.config.base.rpcUrl)
             })
-
-            this.blockNumber = BigInt(33413241);
+            this.blockNumber = this.config.base.fromBlock;
         } catch (error) {
             console.error(
                 "[ViemService] :: Error initializing ViemService",
@@ -35,23 +34,4 @@ export class ViemService {
             throw error;
         }
     }
-
-
-    async getContractEvents(contractAddress: Address, abi: any): Promise<any> {
-        return this.client.getContractEvents({
-            address: contractAddress,
-            abi: abi,
-            fromBlock: BigInt(33413241),
-            // toBlock: this.blockNumber as bigint + 1n,
-            toBlock: BigInt(33413242)
-            //limit 500
-        })
-    }
-
-    // async watchContractEvents(contractAddress: address) {
-    //     this.clientWatch.watchContractEvent(
-
-    //     )
-    // }
-
 }

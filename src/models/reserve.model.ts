@@ -31,7 +31,7 @@ export class Reserve {
     isFrozen: boolean;
     lastUpdated: Date;
 
-    constructor(assetAddress: Address, name: string, symbol: string, decimals: bigint, liquidationThreshold: bigint, liquidityIndex: bigint, variableBorrowIndex: bigint, ltv: bigint, liquidationBonus: bigint, reserveFactor: bigint, isActive: boolean, isFrozen: boolean, lastUpdated?: Date) {
+    constructor(assetAddress: Address, name: string, symbol: string, decimals: bigint, liquidationThreshold: bigint, liquidityIndex: bigint, variableBorrowIndex: bigint, ltv: bigint, liquidationBonus: bigint, reserveFactor: bigint, isActive: boolean, isFrozen: boolean, lastUpdated: Date) {
         this.assetAddress = assetAddress;
         this.name = name;
         this.symbol = symbol;
@@ -44,7 +44,7 @@ export class Reserve {
         this.reserveFactor = reserveFactor;
         this.isActive = isActive;
         this.isFrozen = isFrozen;
-        this.lastUpdated = lastUpdated ?? new Date();
+        this.lastUpdated = lastUpdated;
     }
 
     toDB(): ReserveDB {
@@ -61,7 +61,7 @@ export class Reserve {
             reserve_factor: Number(this.reserveFactor),
             is_active: this.isActive,
             is_frozen: this.isFrozen,
-            last_updated: BigInt(this.lastUpdated.getTime())
+            last_updated: BigInt(this.lastUpdated?.getTime())
         };
     }
 

@@ -31,6 +31,15 @@ export class EModeCategoryController {
         }
     }
 
+    async getEmodeCategoriesCount(where?: string): Promise<number> {
+        try {
+            return await this.emodeCategoryRepository.getTableCount(where);
+        } catch (error) {
+            console.error("[EModeCategoryController][getEmodeCategoriesCount] :: Error fetching eMode category count:", error);
+            throw error;
+        }
+    }
+
 
     async fetchEmodeCategoriesId(): Promise<number[]> {
         try {

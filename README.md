@@ -13,6 +13,9 @@ getUserAccountData(0x00000655388d579492cf53ca6f490eaa30711112) : https://basesca
 
 
 
+- Il faut fork la blockchain a un block T, jusqu'à un block X ou il y a eu des liquidations ! pour voir si le script detecte l'opportunités;
+- selector transactionCall : 0x00a718a9 (faire dans filtre avancé);
+- exemple : https://etherscan.io/advanced-filter?fadd=0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2&tadd=0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2&mtd=0x00a718a9%7eLiquidation+Call
 - Etapes : 
     1. Récupérer toutes les addresses de user via subgraph ✅
     2. Récupérer les reservesData ✅

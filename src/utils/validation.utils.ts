@@ -90,6 +90,7 @@ export class ValidationUtils {
     }
 
 
+
     /*
     example 10_100 - 9_000;
     diff = 100;
@@ -206,7 +207,6 @@ export class ValidationUtils {
             );
         }
 
-        console.log(failedRows);
         if (failedRows.length > 0) {
             entries.push(
                 {

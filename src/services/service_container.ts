@@ -1,4 +1,3 @@
-import assert from 'assert';
 
 import { AssetController } from "../controllers/asset.controller";
 import { AssetPriceController } from "../controllers/asset_price.controller";
@@ -15,14 +14,30 @@ import { UserReserveRepository } from "../repositories/user_reserve.repository";
 import { DuckDBService } from "./duckdb.service";
 import { SubgraphService } from "./subgraph.service";
 import { ViemService } from "./viem.service";
+import { EventService } from './event.service';
+import { EventController } from "../controllers/event.controller";
+import { EventRespository } from "@/repositories/event.repository";
+import { EventNewRepository } from "@/repositories/event.new.repository";
+import { EventNewController } from "@/controllers/event.new.controller";
 
 export class ServiceContainer {
 
+    // services
     public static dbService: DuckDBService;
-    private static viemService: ViemService;
-    private static subgraphService: SubgraphService;
+    public static viemService: ViemService;
+    public static subgraphService: SubgraphService;
+
+    // public static eventService: EventService;
+    // public static eventController: EventController;
 
     // SingleTon
+
+    private static eventNewRepository: EventNewRepository;
+    public static eventNewController: EventNewController;
+
+    private static eventRepository: EventRespository;
+    public static eventController: EventController;
+
     private static reserveRepository: ReserveRepository;
     public static reserveController: ReserveController;
 
@@ -52,6 +67,11 @@ export class ServiceContainer {
             await this.subgraphService.initialize();
 
 
+            this.eventNewRepository = new EventNewRepository(this.dbService, this.viemService, this.subgraphService);
+            this.eventNewController = new EventNewController(this.eventNewRepository);
+
+            this.eventRepository = new EventRespository(this.dbService, this.viemService, this.subgraphService);
+            this.eventController = new EventController(this.eventRepository);
             // Initialize repositories
             this.reserveRepository = new ReserveRepository(this.dbService, this.viemService, this.subgraphService);
             this.reserveController = new ReserveController(this.reserveRepository);
@@ -74,49 +94,9 @@ export class ServiceContainer {
 
             console.info("[ServiceContainer] :: Services initialized successfully");
 
-            await this.run(100);
-
-
         } catch (error) {
             console.error("[ServiceContainer][initialize] :: Error initializing services:", error);
             throw error;
         }
     }
-
-    static async run(userNumber: number): Promise<void> {
-        try {
-            await this.dbService.resetDatabase();
-
-            let userReserves: [] = [];
-
-            const { reservesData, assets } = await this.reserveController.init(this.assetController);
-
-
-            const assetPrices = await this.assetPriceController.init(assets);
-
-
-            const eModeCategories = await this.eModeCategoryController.init();
-            const users = await this.userController.init(userNumber);
-
-            for (const user of users) {
-                const userReserves = await this.userReserveController!.init(user.address);
-                userReserves.push(...userReserves);
-            }
-
-            assert(reservesData.length > 0, "Reserves data is empty");
-            assert(assets.length > 0, "Assets data is empty");
-            assert(assetPrices.length > 0, "Asset prices data is empty");
-            assert(eModeCategories.length > 0, "Emode categories data is empty");
-            assert(users.length > 0, "Users data is empty");
-            assert(userReserves.length > 0, "User reserves data is empty");
-
-            console.info("[LiquidationController] :: Data fetched successfully");
-
-        } catch (error) {
-            console.error("[ServiceContainer][run] :: Error running services:", error);
-            throw error;
-        }
-    }
-
-
 }

@@ -28,28 +28,34 @@ export class ReserveRepository extends BaseRepository<Reserve, ReserveDB> {
                           BLOCKCHAIN
     //////////////////////////////////////////////////////////////*/
 
-    public async fetchReservesData(): Promise<Reserve[]> {
+    public async fetchReservesData(blockNumber?: bigint): Promise<Reserve[]> {
         const result = await this.blockChainRepository.readContract<any>(
             this.viemService.uiPoolDataProvider,
             uiPoolDataProviderAbi,
             'getReservesData',
-            [this.viemService.addressProvider]
+            [this.viemService.addressProvider],
+            blockNumber
         );
 
-        return result[0].map((e: any) => new Reserve(
-            e.underlyingAsset as Address,
-            e.name,
-            e.symbol,
-            BigInt(e.decimals),
-            e.reserveLiquidationThreshold,
-            e.liquidityIndex,
-            e.variableBorrowIndex,
-            e.baseLTVasCollateral,
-            e.reserveLiquidationBonus,
-            e.reserveFactor,
-            e.isActive,
-            e.isFrozen,
-        ));
+
+        return result[0].map((e: any) => {
+            e = this.normalizeAddresses(e);
+            return new Reserve(
+                e.underlyingAsset as Address,
+                e.name,
+                e.symbol,
+                BigInt(e.decimals),
+                e.reserveLiquidationThreshold,
+                e.liquidityIndex,
+                e.variableBorrowIndex,
+                e.baseLTVasCollateral,
+                e.reserveLiquidationBonus,
+                e.reserveFactor,
+                e.isActive,
+                e.isFrozen,
+                new Date(e.lastUpdateTimestamp * 1000),
+            )
+        });
     }
 
 

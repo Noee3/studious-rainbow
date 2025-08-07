@@ -28,25 +28,26 @@ export class UserReserveRepository extends BaseRepository<UserReserve, UserReser
                           BLOCKCHAIN
     //////////////////////////////////////////////////////////////*/
 
-    public async fetchUserReservesData(userAddress: Address): Promise<UserReserve[]> {
+    public async fetchUserReservesData(userAddress: Address, blockNumber?: bigint): Promise<UserReserve[]> {
         const result = await this.blockChainRepository.readContract<any>(
             this.viemService.uiPoolDataProvider,
             uiPoolDataProviderAbi,
             'getUserReservesData',
-            [this.viemService.addressProvider, userAddress]
+            [this.viemService.addressProvider, userAddress],
+            blockNumber
         );
 
-        return result[0].map((e: any) =>
-            new UserReserve(
+        return result[0].map((e: any) => {
+            e = this.normalizeAddresses(e);
+            return new UserReserve(
                 userAddress,
                 e.underlyingAsset as Address,
                 e.usageAsCollateralEnabledOnUser,
                 e.scaledATokenBalance as bigint,
                 e.scaledVariableDebt as bigint,
-            )
-        );
+            );
+        });
     }
-
 
     /*//////////////////////////////////////////////////////////////
                             DATABASE

@@ -11,7 +11,7 @@ export class DuckDBService {
 
     async connect(): Promise<DuckDBConnection> {
         try {
-            const instance = await DuckDBInstance.create(path.resolve(this.config.path));
+            const instance = await DuckDBInstance.create(this.config.path);
             this.connection = await DuckDBConnection.create(instance);
             this.tables = ['assets', 'asset_prices', 'emode_categories', 'reserves', 'users', 'user_reserves'];
             console.info('[DuckDBService] Connected to DuckDB instance %s', this.config.name);
@@ -25,7 +25,7 @@ export class DuckDBService {
     async resetDatabase(): Promise<void> {
         await this.dropTable();
         await this.executeSQLFile();
-        console.log('✅ Database reset successfully');
+        console.info('✅ Database reset successfully');
     }
 
     async dropTable(): Promise<void> {
@@ -65,7 +65,7 @@ export class DuckDBService {
                     await this.connection!.run(statement);
                 }
             }
-            console.log(`[DuckDBService] 📂 SQL file executed successfully: ${filePath}`);
+            console.info(`[DuckDBService] 📂 SQL file executed successfully: ${filePath}`);
 
         } catch (error) {
             console.error(`[DuckDBService][executeSQLFile] ::`, error);

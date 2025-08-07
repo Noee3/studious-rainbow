@@ -10,24 +10,17 @@ export class AssetController {
         this.assetRepository = assetRepository;
     }
 
-    async init(reserves: Reserve[]): Promise<Asset[]> {
+    async init(): Promise<Asset[]> {
         try {
             console.info("[AssetController] :: initialisation");
             let assets = await this.fetchAllAssets();
             if (assets.length === 0) {
                 console.info("[AssetController] :: fetchAssetsData 🌐");
-                for (const reserve of reserves) {
-                    assets.push(new Asset(
-                        reserve.assetAddress as Address,
-                        reserve.decimals,
-                        reserve.name,
-                        reserve.symbol
-                    ));
-                }
+                const assetList: Address[] = await this.assetRepository.fetchAssetList();
+                assets = await this.assetRepository.fetchAssetData(assetList);
+
                 await this.insertAssets(assets);
 
-                // not necessary just to confirm data conformity
-                assets = await this.fetchAllAssets();
             } else {
                 console.info("[AssetController] :: fetchAssetsDB 💾");
             }
@@ -39,11 +32,20 @@ export class AssetController {
         }
     }
 
+    async getAssetsCount(where?: string): Promise<number> {
+        try {
+            return await this.assetRepository.getTableCount(where);
+        } catch (error) {
+            console.error("[AssetController][getAssetsCount] :: Error fetching asset count:", error);
+            throw error;
+        }
+    }
+
     async fetchAllAssets(): Promise<Asset[]> {
         try {
             return await this.assetRepository.fetchAll();
         } catch (error) {
-            console.error("[ReserveController][fetchAllAssets] :: Error fetching assets:", error);
+            console.error("[AssetController][fetchAllAssets] :: Error fetching assets:", error);
             throw error;
         }
     }

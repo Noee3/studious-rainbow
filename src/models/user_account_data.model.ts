@@ -33,7 +33,6 @@ export class UserAccountData {
             healthFactor: (Number(this.healthFactor) / Number(Constants.WAD)).toFixed(4),
         } as UserAccountDataNormalized;
 
-        console.log(userAccountDataNormalized);
         return userAccountDataNormalized;
     }
 }

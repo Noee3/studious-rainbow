@@ -1,3 +1,5 @@
+import { Address } from "viem";
+
 export const queryAaveUsers: any = (blockNumber: number, first: number, skip: number = 0) => {
     return `
     {
@@ -11,6 +13,25 @@ export const queryAaveUsers: any = (blockNumber: number, first: number, skip: nu
     }
 `;
 };
+
+
+
+
+export const queryAaveUsersByAddress: any = (blockNumber: number, query: string[]) => {
+    return `
+    {
+        users(block: { number: ${blockNumber}}, where: {
+            id_in: [${query}] }) {
+                id
+                eModeCategoryId{
+                    id
+                }
+        }
+    }
+`;
+};
+
+
 
 
 export const queryAaveEmodeCategoriesId: any = () => {

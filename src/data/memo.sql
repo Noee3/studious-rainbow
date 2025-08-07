@@ -92,3 +92,13 @@ CREATE or REPLACE TABLE reserves (
             created_at TIMESTAMP DEFAULT NOW(),
             updated_at TIMESTAMP DEFAULT NOW()
 );
+
+-- CREATION D'INDEX
+
+CREATE INDEX idx_users_address ON users(address);
+
+-- Vérifier que l'index existe
+PRAGMA table_info('users');
+
+-- Voir le plan d'exécution (pour debug)
+EXPLAIN SELECT * FROM users WHERE address = '0x123...';

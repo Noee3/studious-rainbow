@@ -1,3 +1,5 @@
+import path from 'path';
+
 export interface DatabaseConfig {
     name: string;
     path: string;
@@ -7,8 +9,8 @@ export interface DatabaseConfig {
 }
 
 export const databaseConfig: DatabaseConfig = {
-    name: "aave_base",
-    path: './data/aave_base.db',
+    name: "aave_dev",
+    path: path.resolve(process.cwd(), 'src/data', 'aave_dev.bd'),
     readOnly: false,
     threads: 4
 };
@@ -17,6 +19,7 @@ export const dbConfigs = {
     development: databaseConfig,
     production: {
         ...databaseConfig,
-        path: databaseConfig.path + databaseConfig.name
+        path: path.resolve(process.cwd(), 'src/data', 'aave_prod.bd'),
+        name: 'avve_prod',
     },
 };

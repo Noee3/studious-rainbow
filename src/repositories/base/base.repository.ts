@@ -9,7 +9,7 @@ export abstract class BaseRepository<TModel, TDB> extends DbRepository {
         protected viemService: ViemService,
         protected table: string,
     ) {
-        super(dbService);
+        super(dbService, table);
     }
 
     protected abstract fromDB(dbRecord: TDB): TModel;
@@ -18,21 +18,42 @@ export abstract class BaseRepository<TModel, TDB> extends DbRepository {
 
 
     async fetchAll(where?: string, limit?: number): Promise<TModel[]> {
-        const data: TDB[] = await this.fetchTable(this.table, where, limit);
-        return data.map(item => this.fromDB(item));
+        const data: TDB[] = await this.fetchTable(where, limit);
+
+        return data.map(item => this.fromDB(this.normalizeAddresses(item)));
     }
 
+
     async insertMany(items: TModel[]): Promise<void> {
+
         return await this.bulkInsert<TModel>(
-            this.table,
             items,
             (appender, item) => {
-                this.appendItem(appender, this.toDB(item));
+                const dbItem = this.toDB(item);
+                const normalizedItem = this.normalizeAddresses(dbItem);
+                this.appendItem(appender, normalizedItem);
             }
         );
     }
 
+    async getTableCount(where?: string): Promise<number> {
+        return await this.getCount(where);
+    }
+
+
     async update(where: string, fields: Record<string, any>): Promise<any> {
-        return await this.updateTable(this.table, where, fields);
+        return await this.updateTable(where, fields);
+    }
+
+    protected normalizeAddresses(dbObject: any): any {
+        const normalized = { ...dbObject } as any;
+
+        Object.keys(normalized).forEach(key => {
+            if (typeof normalized[key] === 'string') {
+                normalized[key] = normalized[key].toLowerCase();
+            }
+        });
+
+        return normalized;
     }
 }
