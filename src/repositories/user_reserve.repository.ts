@@ -1,4 +1,3 @@
-import { Address } from "viem";
 import { UserReserve, UserReserveDB } from "../models/user_reserve.model";
 import { DuckDBService } from "../services/duckdb.service";
 import { ViemService } from "../services/viem.service";
@@ -6,6 +5,7 @@ import { BaseRepository } from "./base/base.repository";
 import { BlockchainRepository } from "./base/blockchain.repository";
 import { uiPoolDataProviderAbi } from "../typechain/abis/aaveUiPoolDataProvider.abi";
 import { SubgraphService } from "../services/subgraph.service";
+import { Address } from "viem";
 
 
 export class UserReserveRepository extends BaseRepository<UserReserve, UserReserveDB> {
@@ -29,12 +29,13 @@ export class UserReserveRepository extends BaseRepository<UserReserve, UserReser
     //////////////////////////////////////////////////////////////*/
 
     public async fetchUserReservesData(userAddress: Address, blockNumber?: bigint): Promise<UserReserve[]> {
+
         const result = await this.blockChainRepository.readContract<any>(
             this.viemService.uiPoolDataProvider,
             uiPoolDataProviderAbi,
             'getUserReservesData',
             [this.viemService.addressProvider, userAddress],
-            blockNumber
+            blockNumber ?? this.viemService.blockNumber,
         );
 
         return result[0].map((e: any) => {

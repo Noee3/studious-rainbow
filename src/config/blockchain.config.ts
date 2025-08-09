@@ -26,7 +26,7 @@ export const chainConfigs = {
     base: {
         chain: base,
         // fromBlock: BigInt(33413241),
-        fromBlock: BigInt(28610722),
+        fromBlock: BigInt(28610726),
         rpcUrl: process.env.BASE_RPC_URL,
         graphApiKey: process.env.GRAPH_API_KEY,
         subgraph: 'https://gateway.thegraph.com/api/subgraphs/id/GQFbb95cE6d8mV989mL5figjaGaKCQB3xqYrr1bRyXqF',

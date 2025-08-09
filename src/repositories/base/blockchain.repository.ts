@@ -1,4 +1,4 @@
-import { Address, MulticallContracts } from "viem";
+import { Address } from "viem";
 import { ViemService } from "../../services/viem.service";
 import { SubgraphService } from "../../services/subgraph.service";
 
@@ -20,24 +20,24 @@ export class BlockchainRepository {
         abi: any,
         functionName: string,
         args: readonly any[] = [],
-        blockNumber: bigint = this.viemService.blockNumber as bigint
+        blockNumber: bigint,
     ): Promise<T> {
-        const result = await this.viemService.client.readContract({
-            blockNumber,
-            address,
-            abi,
-            functionName,
-            args
-        });
 
+        const result = await this.viemService.client.readContract({
+            address: address,
+            abi: abi,
+            blockNumber: blockNumber,
+            functionName: functionName,
+            args: args
+        });
         return result as T;
     }
 
     public async getContractEvents<T>(
         address: Address,
         abi: any,
+        fromBlock: bigint,
         toBlock: bigint,
-        fromBlock: bigint = this.viemService.blockNumber as bigint,
         eventName?: string,
         args?: {}
     ): Promise<T> {
@@ -50,6 +50,14 @@ export class BlockchainRepository {
             fromBlock: fromBlock,
             toBlock: toBlock,
         });
+
+        result.sort((a: any, b: any) => {
+            const blockDiff = Number(a.blockNumber) - Number(b.blockNumber);
+            if (blockDiff !== 0) return blockDiff;
+            return a.transactionIndex - b.transactionIndex;
+        });
+
+        console.log(result);
 
         return result as T;
     }

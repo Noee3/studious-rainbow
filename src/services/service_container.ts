@@ -15,10 +15,8 @@ import { DuckDBService } from "./duckdb.service";
 import { SubgraphService } from "./subgraph.service";
 import { ViemService } from "./viem.service";
 import { EventService } from './event.service';
-import { EventController } from "../controllers/event.controller";
-import { EventRespository } from "@/repositories/event.repository";
-import { EventNewRepository } from "@/repositories/event.new.repository";
-import { EventNewController } from "@/controllers/event.new.controller";
+import { EventRepository } from "@/repositories/event.repository";
+import { EventController } from "@/controllers/event.controller";
 
 export class ServiceContainer {
 
@@ -32,10 +30,7 @@ export class ServiceContainer {
 
     // SingleTon
 
-    private static eventNewRepository: EventNewRepository;
-    public static eventNewController: EventNewController;
-
-    private static eventRepository: EventRespository;
+    private static eventRepository: EventRepository;
     public static eventController: EventController;
 
     private static reserveRepository: ReserveRepository;
@@ -66,11 +61,7 @@ export class ServiceContainer {
             await this.dbService.connect();
             await this.subgraphService.initialize();
 
-
-            this.eventNewRepository = new EventNewRepository(this.dbService, this.viemService, this.subgraphService);
-            this.eventNewController = new EventNewController(this.eventNewRepository);
-
-            this.eventRepository = new EventRespository(this.dbService, this.viemService, this.subgraphService);
+            this.eventRepository = new EventRepository(this.dbService, this.viemService, this.subgraphService);
             this.eventController = new EventController(this.eventRepository);
             // Initialize repositories
             this.reserveRepository = new ReserveRepository(this.dbService, this.viemService, this.subgraphService);

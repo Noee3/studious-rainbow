@@ -77,26 +77,6 @@ CREATE INDEX IF NOT EXISTS idx_user_reserves_asset_address ON user_reserves(asse
 
 CREATE OR REPLACE TABLE events (
     event_name VARCHAR,
-    reserve VARCHAR,
-    liquidity_rate VARCHAR,
-    variable_borrow_rate VARCHAR,
-    liquidity_index VARCHAR,
-    variable_borrow_index VARCHAR,
-    interest_rate_mode INTEGER,
-    borrow_rate VARCHAR,
-    onBehalfOf VARCHAR,
-    user VARCHAR,
-    repayer VARCHAR,
-    -- to VARCHAR,
-    amount VARCHAR,
-    use_aToken BOOLEAN,
-    contract_address VARCHAR,
-    block_number VARCHAR,
-    transaction_hash VARCHAR,
-);
-
-CREATE OR REPLACE TABLE eventsNew (
-    event_name VARCHAR,
     contract_address VARCHAR,
     block_number VARCHAR,
     transaction_hash VARCHAR,

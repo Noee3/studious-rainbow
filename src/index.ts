@@ -1,10 +1,9 @@
 
 import assert from 'assert';
-
 import { ArbitrageMonitor } from "./scripts/arbitrage_monitor";
 import { ServiceContainer } from "./services/service_container";
 import { poolAbi } from "./typechain/abis/aavePool.abi";
-import { EventHelper } from './utils/helpers/event.helper';
+// import { EventHelper } from './utils/helpers/event.helper';
 import { ReportData } from './models/report.model';
 import { ValidationUtils } from './utils/validation.utils';
 import { dateFromTimestampValue } from '@duckdb/node-api';
@@ -41,7 +40,7 @@ avec une healthFactor < 1, ce qui permet de surveiller une vues ou une table si 
     // return;
 
     const events = await ServiceContainer.eventController.fetchContractEvents(ServiceContainer.viemService.poolContract, poolAbi, blockToAdd);
-    const usersToAdd = await EventHelper.extractUsersFromEvents(events);
+    const usersToAdd = await ServiceContainer.eventController.extractUsersFromEvents(events);
 
     await arbitrageMonitor.fetchData(usersToAdd, false);
     await ServiceContainer.eventController.processEvents(events);
