@@ -1,0 +1,3 @@
+export const scaledBalanceTokenAbi = [
+    { "inputs": [{ "internalType": "address", "name": "user", "type": "address" }], "name": "scaledBalanceOf", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" }
+];

@@ -45,6 +45,15 @@ export class UserReserveController {
         }
     }
 
+    async fetchUserScaledTokenBalance(userAddress: Address, tokenAddress: Address, blockNumber?: bigint): Promise<bigint> {
+        try {
+            return await this.userReserveRepository.fetchScaledTokenBalance(userAddress, tokenAddress, blockNumber);
+        } catch (error) {
+            console.error("[UserReserveController][fetchUserScaledTokenBalance] :: Error fetching user scaled token balance:", error);
+            throw error;
+        }
+    }
+
     async updateUserReserves(where: string, fields: Record<string, any>): Promise<any> {
         try {
             await this.userReserveRepository.update(where, fields);
@@ -54,18 +63,32 @@ export class UserReserveController {
         }
     }
 
-    async updateAtokenBalance(where: string, amount: bigint, operation: "increment" | "decrement"): Promise<any> {
+    async updateAtokenBalance(where: string, amount: bigint, operation: "increment" | "decrement" | "replace"): Promise<any> {
         try {
 
             const userReserve = await this.userReserveRepository.fetchAll(where);
 
             // if (userReserve[0].scaledATokenBalance == 0n && operation === "decrement") return;
 
-            const total = userReserve[0].scaledATokenBalance + (operation === "increment" ? amount : -amount);
+            let total: bigint;
+            let event: string;
 
-            let event = operation === "increment" ? "Supply" : "Withdraw";
-            console.log(`User :: ${userReserve[0].userAddress} \n ${event} :: ${userReserve[0].scaledATokenBalance} ${operation === "increment" ? ('+ ' + amount) : '- ' + amount} = ${total}`);
+            switch (operation) {
+                case "increment":
+                    total = userReserve[0].scaledATokenBalance + amount;
+                    event = "Supply";
+                    break;
+                case "decrement":
+                    total = userReserve[0].scaledATokenBalance - amount;
+                    event = "Withdraw";
+                    break;
+                case "replace":
+                    total = amount;
+                    event = "Replace";
+                    break;
+            }
 
+            console.log(`User :: ${userReserve[0].userAddress} \n ${event} :: ${userReserve[0].scaledATokenBalance} ${operation === "increment" ? ('+ ' + amount) : operation === "decrement" ? ('- ' + amount) : ''} = ${total}`);
             await this.userReserveRepository.update(where, { scaled_aToken_balance: total, last_updated: BigInt(Date.now()) });
         } catch (error) {
             console.error("[UserReserveController][updateAtokenBalance] :: Error updating aToken balance:", where, error);
@@ -73,15 +96,29 @@ export class UserReserveController {
         }
     }
 
-    async updateVariableDebtBalance(where: string, amount: bigint, operation: "increment" | "decrement"): Promise<any> {
+    async updateVariableDebtBalance(where: string, amount: bigint, operation: "increment" | "decrement" | "replace"): Promise<any> {
         try {
             const userReserve = await this.userReserveRepository.fetchAll(where);
-            const total = userReserve[0].scaledVariableDebt + (operation === "increment" ? amount : -amount);
+            let total: bigint;
+            let event: string;
 
-            let event = operation === "increment" ? "Borrow" : "Repay";
+
+            switch (operation) {
+                case "increment":
+                    total = userReserve[0].scaledVariableDebt + amount;
+                    event = "Borrow";
+                    break;
+                case "decrement":
+                    total = userReserve[0].scaledVariableDebt - amount;
+                    event = "Repay";
+                    break;
+                case "replace":
+                    total = amount;
+                    event = "Replace";
+                    break;
+            }
 
             console.log(`User :: ${userReserve[0].userAddress}\n ${event} :: ${userReserve[0].scaledVariableDebt} ${operation === "increment" ? ('+ ' + amount) : '- ' + amount} = ${total}`);
-
             await this.userReserveRepository.update(where, { scaled_variable_debt: total, last_updated: BigInt(Date.now()) });
         } catch (error) {
             console.error("[UserReserveController][updateVariableDebtBalance] :: Error updating variable debt balance :", where, error);

@@ -34,7 +34,7 @@ export class ReserveRepository extends BaseRepository<Reserve, ReserveDB> {
             uiPoolDataProviderAbi,
             'getReservesData',
             [this.viemService.addressProvider],
-            blockNumber
+            blockNumber ?? this.viemService.blockNumber
         );
 
 
@@ -51,6 +51,8 @@ export class ReserveRepository extends BaseRepository<Reserve, ReserveDB> {
                 e.baseLTVasCollateral,
                 e.reserveLiquidationBonus,
                 e.reserveFactor,
+                e.aTokenAddress as Address,
+                e.variableDebtTokenAddress as Address,
                 e.isActive,
                 e.isFrozen,
                 new Date(e.lastUpdateTimestamp * 1000),
@@ -83,6 +85,8 @@ export class ReserveRepository extends BaseRepository<Reserve, ReserveDB> {
         appender.appendInteger(dbRecord.ltv);
         appender.appendInteger(dbRecord.liquidation_bonus);
         appender.appendInteger(dbRecord.reserve_factor);
+        appender.appendVarchar(dbRecord.a_token_address);
+        appender.appendVarchar(dbRecord.variable_debt_token_address);
         appender.appendBoolean(dbRecord.is_active);
         appender.appendBoolean(dbRecord.is_frozen);
         appender.appendBigInt(dbRecord.last_updated);

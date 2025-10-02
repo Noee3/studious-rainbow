@@ -1,6 +1,7 @@
 import { createPublicClient, erc20Abi, http } from 'viem';
 import { uiPoolDataProviderAbi } from "./typechain/abis/aaveUiPoolDataProvider.abi";
 import { poolAbi } from "./typechain/abis/aavePool.abi";
+import { scaledBalanceTokenAbi } from './typechain/abis/aaveBalanceToken.abi';
 
 import { base } from 'viem/chains';
 import * as dotenv from 'dotenv';
@@ -33,11 +34,21 @@ const client = createPublicClient({
 
 async function getBalanceOf() {
     return await client.readContract({
-        address: "0xd9aaec86b65d86f6a7b5b1b0c42ffa531710b6ca",
+        address: "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
         abi: erc20Abi,
         functionName: 'balanceOf',
-        args: ["0xF6C0A374a483101e04EF5F7Ac9Bd15d9142BAC95"],
-        // blockNumber: 28610729n,
+        args: ["0x4e5443d2db3faa306b01a25f1793cdad7ff5a1bd"],
+        blockNumber: 28610729n,
+    });
+}
+
+async function getScaleBalanceOf() {
+    return await client.readContract({
+        address: "0x4e65fE4DbA92790696d040ac24Aa414708F5c0AB",
+        abi: scaledBalanceTokenAbi,
+        functionName: 'scaledBalanceOf',
+        args: ["0x4e5443d2db3faa306b01a25f1793cdad7ff5a1bd"],
+        blockNumber: 28610730n,
     });
 }
 
@@ -92,3 +103,7 @@ async function fetchEvents() {
         toBlock: toBlockNumber,
     });
 }
+/*
+Ok il ne repaye pas avec son aToken, mais ca devrait ne pas augmenter son aToken? mais réduire ca dette seulement !
+
+*/

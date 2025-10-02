@@ -11,6 +11,8 @@ export interface ReserveDB {
     ltv: number;
     liquidation_bonus: number;
     reserve_factor: number;
+    a_token_address: string;
+    variable_debt_token_address: string;
     is_active: boolean;
     is_frozen: boolean;
     last_updated: bigint;
@@ -27,11 +29,13 @@ export class Reserve {
     ltv: bigint;
     liquidationBonus: bigint;
     reserveFactor: bigint;
+    aTokenAddress: Address;
+    variableDebtTokenAddress: Address;
     isActive: boolean;
     isFrozen: boolean;
     lastUpdated: Date;
 
-    constructor(assetAddress: Address, name: string, symbol: string, decimals: bigint, liquidationThreshold: bigint, liquidityIndex: bigint, variableBorrowIndex: bigint, ltv: bigint, liquidationBonus: bigint, reserveFactor: bigint, isActive: boolean, isFrozen: boolean, lastUpdated: Date) {
+    constructor(assetAddress: Address, name: string, symbol: string, decimals: bigint, liquidationThreshold: bigint, liquidityIndex: bigint, variableBorrowIndex: bigint, ltv: bigint, liquidationBonus: bigint, reserveFactor: bigint, aTokenAddress: Address, variableDebtTokenAddress: Address, isActive: boolean, isFrozen: boolean, lastUpdated: Date) {
         this.assetAddress = assetAddress;
         this.name = name;
         this.symbol = symbol;
@@ -42,6 +46,8 @@ export class Reserve {
         this.ltv = ltv;
         this.liquidationBonus = liquidationBonus;
         this.reserveFactor = reserveFactor;
+        this.aTokenAddress = aTokenAddress;
+        this.variableDebtTokenAddress = variableDebtTokenAddress;
         this.isActive = isActive;
         this.isFrozen = isFrozen;
         this.lastUpdated = lastUpdated;
@@ -59,6 +65,8 @@ export class Reserve {
             ltv: Number(this.ltv),
             liquidation_bonus: Number(this.liquidationBonus),
             reserve_factor: Number(this.reserveFactor),
+            a_token_address: this.aTokenAddress,
+            variable_debt_token_address: this.variableDebtTokenAddress,
             is_active: this.isActive,
             is_frozen: this.isFrozen,
             last_updated: BigInt(this.lastUpdated?.getTime())
@@ -77,6 +85,8 @@ export class Reserve {
             BigInt(reserveDB.ltv),
             BigInt(reserveDB.liquidation_bonus),
             BigInt(reserveDB.reserve_factor),
+            reserveDB.a_token_address as Address,
+            reserveDB.variable_debt_token_address as Address,
             reserveDB.is_active,
             reserveDB.is_frozen,
             new Date(Number(reserveDB.last_updated))

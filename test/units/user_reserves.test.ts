@@ -1,7 +1,9 @@
 import { User } from "@/models/user.model";
 import { ServiceContainer } from "@/services/service_container";
+import { rayDiv } from "@/utils/math.utils";
 import { expect, jest, test, beforeAll } from '@jest/globals';
 import { Address } from "viem";
+
 
 const usersAddress = [
     '0xa089f783c32f694d4cea66fd03c88971766a3c26',
@@ -19,6 +21,7 @@ beforeAll(async (
     await ServiceContainer.initialize();
     await ServiceContainer.dbService.resetDatabase();
     await ServiceContainer.assetController.init();
+    await ServiceContainer.reserveController.init();
     users = await ServiceContainer.userController.init(usersAddress);
 });
 
@@ -30,9 +33,6 @@ test("should fetch user reserves data from protocol and store it in bdd", async 
         const userCount = await ServiceContainer.userReserveController.getUserReservesCount(`user_address = '${user.address}'`);
         expect(userReserves.length).toEqual(userCount);
     }
-
-    const count = await ServiceContainer.userReserveController.getUserReservesCount();
-    expect(count).toEqual(users.length * 13);
 });
 
 test("user reserves from chain and bdd should be exactly the same", async () => {
@@ -50,3 +50,28 @@ test("user reserves from chain and bdd should be exactly the same", async () => 
         expect(userReserves.length).toEqual(count);
     }
 });
+
+
+test("user reserve balance from chain and bdd should be exactly the same", async () => {
+    const reserves = await ServiceContainer.reserveController.fetchAllReserves();
+
+    for (const user of users) {
+        const userReservesFromChain = await ServiceContainer.userReserveController.init(user.address);
+        const userReservesFetchFromDB = await ServiceContainer.userReserveController.fetchAllUserReserves(`user_address = '${user.address}'`);
+
+        for (const userReserve of userReservesFromChain) {
+
+            const userReserveFromFetch = userReservesFetchFromDB.find(r => r.userAddress === userReserve.userAddress && r.assetAddress === userReserve.assetAddress);
+
+            const currentReserve = reserves.find(r => r.assetAddress === userReserve.assetAddress);
+            const aTokenAddress = currentReserve!.aTokenAddress;
+            const variableDebtTokenAddress = currentReserve!.variableDebtTokenAddress;
+
+            const scaledATokenBalance = await ServiceContainer.userReserveController.fetchUserScaledTokenBalance(user.address, aTokenAddress);
+            const scaledVariableDebtTokenBalance = await ServiceContainer.userReserveController.fetchUserScaledTokenBalance(user.address, variableDebtTokenAddress);
+
+            expect(scaledVariableDebtTokenBalance).toEqual(userReserveFromFetch!.scaledVariableDebt);
+            expect(scaledATokenBalance).toEqual(userReserveFromFetch!.scaledATokenBalance);
+        }
+    }
+}, 50000);

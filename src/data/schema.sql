@@ -42,6 +42,8 @@ CREATE OR REPLACE TABLE reserves (
     ltv INTEGER,
     liquidation_bonus INTEGER,
     reserve_factor INTEGER,
+    a_token_address VARCHAR,
+    variable_debt_token_address VARCHAR,
     is_active BOOLEAN,
     is_frozen BOOLEAN,
     last_updated BIGINT,

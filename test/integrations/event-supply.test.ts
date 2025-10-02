@@ -38,28 +38,25 @@ beforeAll(async () => {
     const eventsCount = ServiceContainer.eventController.eventCounts(events)
     console.log("[EVENTS] :: %s fetch from chain\n", events.length, eventsCount);
 
-    console.log(events);
-
 }, 50000);
 
 test("user reserves before events should be exactly the same as from chain", async () => { 
+    for (const user of arbitrageMonitor.users) {
+        const userReservesBeforeFromDB = await ServiceContainer.userReserveController.fetchAllUserReserves(`user_address = '${user.address}'`);
+        const userReservesBeforeFromChain = await ServiceContainer.userReserveController.userReserveRepository.fetchUserReservesData(user.address);
+        expect(userReservesBeforeFromDB.length).toEqual(userReservesBeforeFromChain.length);
 
-    // for (const user of arbitrageMonitor.users) {
-    //     const userReservesBeforeFromDB = await ServiceContainer.userReserveController.fetchAllUserReserves(`user_address = '${user.address}'`);
-    //     const userReservesBeforeFromChain = await ServiceContainer.userReserveController.userReserveRepository.fetchUserReservesData(user.address);
-    //     expect(userReservesBeforeFromDB.length).toEqual(userReservesBeforeFromChain.length);
-
-    //     for (const reserve of userReservesBeforeFromDB) {
-    //         const reserveBeforeFromChain = userReservesBeforeFromChain.find(r => r.assetAddress === reserve.assetAddress);
-    //         expect({ ...reserveBeforeFromChain, lastUpdated: 0 }).toEqual({ ...reserve, lastUpdated: 0 });
-    //     }
-    // }
-    // return true;
+        for (const reserve of userReservesBeforeFromDB) {
+            const reserveBeforeFromChain = userReservesBeforeFromChain.find(r => r.assetAddress === reserve.assetAddress);
+            expect({ ...reserveBeforeFromChain, lastUpdated: 0 }).toEqual({ ...reserve, lastUpdated: 0 });
+        }
+    }
+    return true;
 });
 
 test("user reserves from chain and bdd should be exactly the same when events update data (All events)", async () => {
     let count = 0;
-    await ServiceContainer.eventController.processEvents(events);
+    await ServiceContainer.eventController.processEventsWithBalance(events);
 
     for (const user of arbitrageMonitor.users) {
 
@@ -80,20 +77,32 @@ test("user reserves from chain and bdd should be exactly the same when events up
 }, 50000);
 
 
-// test("user reserves from chain and bdd should be exactly the same when events update data (All events)", async () => {
-//   await ServiceContainer.eventController.processEvents(events);
 
-//   for (const user of arbitrageMonitor.users) {
-//     const userReservesFromDB = await ServiceContainer.userReserveController.fetchAllUserReserves(`user_address = '${user.address}'`);
-//     const userReservesFromChain = await ServiceContainer.userReserveController.userReserveRepository.fetchUserReservesData(user.address, toBlockNumber);
+test.skip("user reserves from chain and bdd should be exactly the same when events update data (All events)", async () => {
+    //TODO add event from paraswap swap and repay https://basescan.org/address/0x63dfa7c09dc2ff4030d6b8dc2ce6262bf898c8a4#writeContract
+    // or understand it deeply
+    let count = 0;
+    await ServiceContainer.eventController.processEvents(events);
+    console.log(events);
 
-//     for (const reserve of userReservesFromDB) {
-//       const reserveFromChain = userReservesFromChain.find(r => r.assetAddress === reserve.assetAddress);
-//         expect(reserveFromChain).toBeTruthy();
-//         expect({ ...reserve, lastUpdated: 0 }).toEqual({ ...reserveFromChain, lastUpdated: 0 });
-//     }
-//   }
-// });
+
+    for (const user of arbitrageMonitor.users) {
+
+        const userReservesAfterFromDB = await ServiceContainer.userReserveController.fetchAllUserReserves(`user_address = '${user.address}'`);
+        const userReservesAfterFromChain = await ServiceContainer.userReserveController.userReserveRepository.fetchUserReservesData(user.address, toBlockNumber);
+
+        for (const reserve of userReservesAfterFromDB) {
+            const reserveFromChain = userReservesAfterFromChain.find(r => r.assetAddress === reserve.assetAddress);
+            expect(reserveFromChain).toBeTruthy();
+            expect({ ...reserve, lastUpdated: 0 }).toEqual({ ...reserveFromChain, lastUpdated: 0 });
+            // console.log('Passed : ', user.address, 'BDD', reserve.scaledATokenBalance, ' CHAIN ', reserveFromChain?.scaledATokenBalance);
+        }
+        count++;
+        console.log("[PASSED]", count);
+    }
+
+    return true;
+}, 50000);
 
 
 

@@ -4,8 +4,9 @@ import { ViemService } from "../services/viem.service";
 import { BaseRepository } from "./base/base.repository";
 import { BlockchainRepository } from "./base/blockchain.repository";
 import { uiPoolDataProviderAbi } from "../typechain/abis/aaveUiPoolDataProvider.abi";
+import { scaledBalanceTokenAbi } from "../typechain/abis/aaveBalanceToken.abi";
 import { SubgraphService } from "../services/subgraph.service";
-import { Address } from "viem";
+import { Address, erc20Abi } from "viem";
 
 
 export class UserReserveRepository extends BaseRepository<UserReserve, UserReserveDB> {
@@ -48,6 +49,19 @@ export class UserReserveRepository extends BaseRepository<UserReserve, UserReser
                 e.scaledVariableDebt as bigint,
             );
         });
+    }
+
+    public async fetchScaledTokenBalance(userAddress: Address, tokenAddress: Address, blockNumber?: bigint): Promise<bigint> {
+        const result = await this.blockChainRepository.readContract<bigint>(
+            tokenAddress,
+            scaledBalanceTokenAbi,
+            'scaledBalanceOf',
+            [userAddress],
+            blockNumber ?? this.viemService.blockNumber,
+        );
+
+        console.log(result);
+        return result;
     }
 
     /*//////////////////////////////////////////////////////////////

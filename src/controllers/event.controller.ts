@@ -98,6 +98,17 @@ export class EventController {
         }
     }
 
+    public async processEventsWithBalance(events: Event[]): Promise<void> {
+        try {
+            for (const event of events) {
+                await this.processEventWithBalance(event);
+            }
+        } catch (error) {
+            console.error("[EventController][processEvents] :: Error processing events", error);
+            throw error;
+        }
+    }
+
 
 
     public async processEvent(event: Event): Promise<void> {
@@ -123,7 +134,6 @@ export class EventController {
                     break;
                 case EventNames.Withdraw: // recover collateral
                     if (!users[event.eventArgs.user]) break;
-                    console.log("WITHDRAW", event.eventArgs.user);
                     const amountScaledWithdraw = rayDiv(BigInt(event.eventArgs.amount), currentReserve[0].liquidityIndex);
                     await ServiceContainer.userReserveController?.updateAtokenBalance(`user_address = '${event.eventArgs.user}' AND asset_address = '${event.eventArgs.reserve}'`, BigInt(amountScaledWithdraw), 'decrement');
                     break;
@@ -138,7 +148,6 @@ export class EventController {
                     await ServiceContainer.userReserveController?.updateVariableDebtBalance(`user_address = '${event.eventArgs.user}' AND asset_address = '${event.eventArgs.reserve}'`, BigInt(amountScaledRepay), 'decrement');
                     break;
                 case EventNames.LiquidationCall:
-                    console.log("LIQUIDATION CALL");
                     if (!users[event.eventArgs.user]) break;
                     const debtReserve = await ServiceContainer.reserveController?.fetchAllReserves(`asset_address = '${event.eventArgs.debtAsset}'`);
 
@@ -146,6 +155,72 @@ export class EventController {
                     const debtScaled = rayDiv(BigInt(event.eventArgs.debtToCover), debtReserve[0].variableBorrowIndex);
                     await ServiceContainer.userReserveController?.updateAtokenBalance(`user_address = '${event.eventArgs.user}' AND asset_address = '${event.eventArgs.collateralAsset}'`, BigInt(collateralScaled), 'decrement');
                     await ServiceContainer.userReserveController?.updateVariableDebtBalance(`user_address = '${event.eventArgs.user}' AND asset_address = '${event.eventArgs.debtAsset}'`, BigInt(debtScaled), 'decrement');
+                    break;
+            };
+
+        } catch (error) {
+            console.error("[EventController][processEvent] :: Error processing event", event, error);
+            throw error;
+        }
+    }
+
+
+    public async processEventWithBalance(event: Event): Promise<void> {
+        try {
+            const users = await ServiceContainer.userController.usersExists([event.eventArgs.onBehalfOf, event.eventArgs.user]);
+            let currentReserve = await ServiceContainer.reserveController?.fetchAllReserves(`asset_address = '${event.eventArgs.reserve ?? event.eventArgs.collateralAsset}'`);
+            // console.log(currentReserve);
+            switch (event.eventName) {
+                case EventNames.ReserveDataUpdated: // triggered each time reserve data is updated
+                    await ServiceContainer.reserveController?.updateReserve(`asset_address = '${event.eventArgs.reserve}'`, {
+                        liquidity_index: BigInt(event.eventArgs.liquidityIndex),
+                        variable_borrow_index: BigInt(event.eventArgs.variableBorrowIndex),
+                        last_updated: BigInt(event.blockTimestamp * 1000n),
+                    });
+                    break;
+                case EventNames.Supply: // provide collateral
+                    if (!users[event.eventArgs.onBehalfOf]) break; //TODO if i want them to exist i have to create it they are new user; or not in bdd;
+
+                    const aTokenScaledBalanceSupply: bigint = await ServiceContainer.userReserveController?.fetchUserScaledTokenBalance(event.eventArgs.onBehalfOf, currentReserve[0].aTokenAddress, event.blockNumber);
+                    await ServiceContainer.userReserveController?.updateAtokenBalance(`user_address = '${event.eventArgs.onBehalfOf}' AND asset_address = '${event.eventArgs.reserve}'`, BigInt(aTokenScaledBalanceSupply), 'replace');
+                    break;
+                case EventNames.Withdraw: // recover collateral
+                    if (!users[event.eventArgs.user]) break;
+
+                    const aTokenScaledBalanceWithdraw: bigint = await ServiceContainer.userReserveController?.fetchUserScaledTokenBalance(event.eventArgs.user, currentReserve[0].aTokenAddress, event.blockNumber);
+                    await ServiceContainer.userReserveController?.updateAtokenBalance(`user_address = '${event.eventArgs.user}' AND asset_address = '${event.eventArgs.reserve}'`, BigInt(aTokenScaledBalanceWithdraw), 'replace');
+                    break;
+                case EventNames.Borrow: // borrow funds
+                    if (!users[event.eventArgs.onBehalfOf]) break;
+
+                    const debtTokenScaledBalanceBorrow: bigint = await ServiceContainer.userReserveController?.fetchUserScaledTokenBalance(event.eventArgs.onBehalfOf, currentReserve[0].variableDebtTokenAddress, event.blockNumber);
+                    await ServiceContainer.userReserveController?.updateVariableDebtBalance(`user_address = '${event.eventArgs.onBehalfOf}' AND asset_address = '${event.eventArgs.reserve}'`, BigInt(debtTokenScaledBalanceBorrow), 'replace');
+                    break;
+                case EventNames.Repay: // repay borrowed funds
+                    if (!users[event.eventArgs.user]) break;
+                    console.log(event);
+                    console.log(currentReserve);
+                    // console.log("user", event.eventArgs.user, "reserve", event.eventArgs.reserve, event.eventArgs.amount);
+                    // console.log("debtAddress", currentReserve[0].variableDebtTokenAddress, "aTokenAddress", currentReserve[0].aTokenAddress);
+
+                    const debtTokenScaledBalanceRepay: bigint = await ServiceContainer.userReserveController?.fetchUserScaledTokenBalance(event.eventArgs.user, currentReserve[0].variableDebtTokenAddress, event.blockNumber);
+                    const aTokenScaledBalanceRepay: bigint = await ServiceContainer.userReserveController?.fetchUserScaledTokenBalance(event.eventArgs.user, currentReserve[0].aTokenAddress, event.blockNumber);
+
+                    console.log(debtTokenScaledBalanceRepay, "debt");
+                    console.log(aTokenScaledBalanceRepay, "aToken");
+
+                    await ServiceContainer.userReserveController?.updateVariableDebtBalance(`user_address = '${event.eventArgs.user}' AND asset_address = '${event.eventArgs.reserve}'`, BigInt(debtTokenScaledBalanceRepay), 'replace');
+                    // await ServiceContainer.userReserveController?.updateAtokenBalance(`user_address = '${event.eventArgs.user}' AND asset_address = '${event.eventArgs.reserve}'`, BigInt(aTokenScaledBalanceRepay), 'replace');
+
+                    break;
+                case EventNames.LiquidationCall:
+                    if (!users[event.eventArgs.user]) break;
+
+                    const aTokenScaledBalanceLiquidation: bigint = await ServiceContainer.userReserveController?.fetchUserScaledTokenBalance(event.eventArgs.user, event.eventArgs.collateralAsset, event.blockNumber);
+                    const debtTokenScaledBalanceLiquidation: bigint = await ServiceContainer.userReserveController?.fetchUserScaledTokenBalance(event.eventArgs.user, event.eventArgs.debtAsset, event.blockNumber);
+
+                    await ServiceContainer.userReserveController?.updateAtokenBalance(`user_address = '${event.eventArgs.user}' AND asset_address = '${event.eventArgs.collateralAsset}'`, BigInt(aTokenScaledBalanceLiquidation), 'replace');
+                    await ServiceContainer.userReserveController?.updateVariableDebtBalance(`user_address = '${event.eventArgs.user}' AND asset_address = '${event.eventArgs.debtAsset}'`, BigInt(debtTokenScaledBalanceLiquidation), 'replace');
                     break;
             };
 

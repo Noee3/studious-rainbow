@@ -57,8 +57,6 @@ export class BlockchainRepository {
             return a.transactionIndex - b.transactionIndex;
         });
 
-        console.log(result);
-
         return result as T;
     }
 
